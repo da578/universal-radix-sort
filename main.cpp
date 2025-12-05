@@ -7,6 +7,7 @@
 #include "universal_radix_sort.hpp"
 #include <chrono>
 #include <cstdlib>
+#include <cstring>
 #include <functional>
 #include <iomanip>
 #include <random>
@@ -24,6 +25,10 @@ void test_strings();
 void test_strings_descending();
 void test_edge_cases();
 void measure_performance();
+
+struct FixedString {
+  char data[11]; // 11 bytes: max_len (10) + null terminator
+};
 
 int main() {
   cout << "=== UNIVERSAL RADIX SORT TEST SUITE IN C++ ===" << endl;
@@ -215,42 +220,37 @@ void test_strings() {
        << endl;
   vector<string> original_strings = {"banana", "apple",      "zebra",
                                      "fig",    "grapefruit", "cherry"};
-  size_t max_len = get_max_string_length(original_strings);
-  size_t element_size = max_len + 1; // +1 for null terminator
+  const size_t MAX_LEN = get_max_string_length(original_strings);
+  const size_t ELEMENT_SIZE = MAX_LEN + 1; // +1 for null terminator
 
-  cout << "Maximum string length: " << max_len << " characters" << endl;
-  cout << "Element size (with null terminator): " << element_size << " bytes"
-       << endl;
-
-  // Create fixed-length string buffer
-  vector<char> padded_buffer(original_strings.size() * element_size);
-
-  // Copy and pad strings with null terminators
-  for (size_t i = 0; i < original_strings.size(); ++i) {
-    char *dest = &padded_buffer[i * element_size];
-    strncpy(dest, original_strings[i].c_str(), element_size);
-    dest[element_size - 1] = '\0'; // Ensure null termination
+  // Conversion to FixedString
+  vector<FixedString> fixed_array;
+  for (const string &s : original_strings) {
+    FixedString fs;
+    strncpy(fs.data, s.c_str(), ELEMENT_SIZE);
+    fs.data[ELEMENT_SIZE - 1] = '\0';
+    fixed_array.push_back(fs);
   }
 
   cout << "Original strings (padded):" << endl;
-  for (size_t i = 0; i < original_strings.size(); ++i) {
-    cout << "'" << &padded_buffer[i * element_size] << "' ";
+  for (const auto &fs : fixed_array) {
+    cout << "'" << fs.data << "' ";
   }
   cout << endl;
 
   try {
-    // MSB-first (false) for string sorting, with ascending order
-    UniversalRadixSort<char> sorter(
-        UniversalRadixSort<char>::DataType::UNSIGNED_OR_STRING,
-        UniversalRadixSort<char>::ProcessingOrder::MSB_FIRST,
-        UniversalRadixSort<char>::Direction::ASCENDING);
+    // MSB-first (true) for string sorting, with ascending order
+    UniversalRadixSort<FixedString> sorter(
+        UniversalRadixSort<FixedString>::DataType::UNSIGNED_OR_STRING,
+        UniversalRadixSort<FixedString>::ProcessingOrder::MSB_FIRST,
+        UniversalRadixSort<FixedString>::Direction::ASCENDING);
 
     // Sort the buffer as fixed-length strings
-    sorter.sort(padded_buffer.data(), original_strings.size());
+    sorter.sort(fixed_array);
 
     cout << "Sorted strings (ascending):" << endl;
-    for (size_t i = 0; i < original_strings.size(); ++i) {
-      cout << "'" << &padded_buffer[i * element_size] << "' ";
+    for (const auto &fs : fixed_array) {
+      cout << "'" << fs.data << "' ";
     }
     cout << endl;
   } catch (const UniversalRadixSort<char>::RadixException &e) {
@@ -265,38 +265,35 @@ void test_strings_descending() {
        << endl;
   vector<string> original_strings = {"banana", "apple",      "zebra",
                                      "fig",    "grapefruit", "cherry"};
-  size_t max_len = get_max_string_length(original_strings);
-  size_t element_size = max_len + 1; // +1 for null terminator
+  size_t MAX_LEN = get_max_string_length(original_strings);
+  size_t ELEMENT_SIZE = MAX_LEN + 1; // +1 for null terminator
 
-  // Create fixed-length string buffer
-  vector<char> padded_buffer(original_strings.size() * element_size);
-
-  // Copy and pad strings with null terminators
-  for (size_t i = 0; i < original_strings.size(); ++i) {
-    char *dest = &padded_buffer[i * element_size];
-    strncpy(dest, original_strings[i].c_str(), element_size);
-    dest[element_size - 1] = '\0'; // Ensure null termination
+  // Conversion to FixedString
+  vector<FixedString> fixed_array;
+  for (const string &s : original_strings) {
+    FixedString fs;
+    strncpy(fs.data, s.c_str(), ELEMENT_SIZE);
+    fs.data[ELEMENT_SIZE - 1] = '\0'; // Ensure null termination
+    fixed_array.push_back(fs);
   }
 
   cout << "Original strings (padded):" << endl;
-  for (size_t i = 0; i < original_strings.size(); ++i) {
-    cout << "'" << &padded_buffer[i * element_size] << "' ";
+  for (const auto &fs : fixed_array) {
+    cout << "'" << fs.data << "' ";
   }
   cout << endl;
 
   try {
-    // MSB-first (false) for string sorting, with descending order
-    UniversalRadixSort<char> sorter(
-        UniversalRadixSort<char>::DataType::UNSIGNED_OR_STRING,
-        UniversalRadixSort<char>::ProcessingOrder::MSB_FIRST,
-        UniversalRadixSort<char>::Direction::DESCENDING);
-
-    // Sort the buffer as fixed-length strings
-    sorter.sort(padded_buffer.data(), original_strings.size());
+    // MSB-first (true) for string sorting, with descending order
+    UniversalRadixSort<FixedString> sorter(
+        UniversalRadixSort<FixedString>::DataType::UNSIGNED_OR_STRING,
+        UniversalRadixSort<FixedString>::ProcessingOrder::MSB_FIRST,
+        UniversalRadixSort<FixedString>::Direction::DESCENDING);
+    sorter.sort(fixed_array);
 
     cout << "Sorted strings (descending):" << endl;
-    for (size_t i = 0; i < original_strings.size(); ++i) {
-      cout << "'" << &padded_buffer[i * element_size] << "' ";
+    for (const auto &fs : fixed_array) {
+      cout << "'" << fs.data << "' ";
     }
     cout << endl;
   } catch (const UniversalRadixSort<char>::RadixException &e) {

@@ -325,11 +325,11 @@ private:
    */
   void flip_msb_for_signed_types(T *array, const size_t n) {
     unsigned char *bytes = reinterpret_cast<unsigned char *>(array);
-    const unsigned char signBitMask = 0x80; // 10000000 in binary
+    const unsigned char SIGN_BIT_MASK = 0x80; // 10000000 in binary
 
     for (size_t i = 0; i < n; ++i) {
-      size_t msbIndex = i * sizeof(T) + (sizeof(T) - 1);
-      bytes[msbIndex] ^= signBitMask;
+      size_t mbs_index = i * sizeof(T) + (sizeof(T) - 1);
+      bytes[mbs_index] ^= SIGN_BIT_MASK;
     }
   }
 
@@ -440,12 +440,11 @@ private:
 
     // Build output array in reverse order for stability
     unsigned char *temp_bytes = reinterpret_cast<unsigned char *>(temp_array);
-    for (size_t i = n; i > 0; --i) {
-      size_t current_index = i - 1;
-      unsigned char byte_value = bytes[current_index * sizeof(T) + byte_index];
+    for (size_t i = n; --i > 0;) {
+      unsigned char byte_value = bytes[i * sizeof(T) + byte_index];
       size_t outputPos = --count[byte_value];
-      std::memcpy(&temp_bytes[outputPos * sizeof(T)],
-                  &bytes[current_index * sizeof(T)], sizeof(T));
+      std::memcpy(&temp_bytes[outputPos * sizeof(T)], &bytes[i * sizeof(T)],
+                  sizeof(T));
     }
 
     // Copy sorted elements back to original array
