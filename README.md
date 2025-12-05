@@ -147,7 +147,7 @@ sorter.sort(buffer.data(), N);
 
 - `RadixException`: Exception class thrown on errors, containing error code and message
 
-## performance
+## Performance
 Universal radix sort achieves O(n·k) time complexity where k is the number of bytes per element, outperforming O(n log n) comparison sorts for large datasets with small key sizes.
 | Data Type           | Elements | Time (ms) | Comparison with std::sort |
 |---------------------|----------|-----------|---------------------------|
@@ -157,5 +157,5 @@ Universal radix sort achieves O(n·k) time complexity where k is the number of b
 
 Performance measured on Intel i5-3320M @ 3,30GHz, results may vary
 
-**License**
+## License
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
