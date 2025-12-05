@@ -118,22 +118,22 @@ sorter.sort(buffer.data(), N);
 **Nested Enumerations**
 
 - `DataType`: Specifies the data type to be sorted
-  - UNSIGNED_OR_STRING
-  - SIGNED_INTEGER
-  - IEEE754_FLOAT
-  - IEEE754_DOUBLE
+  - `UNSIGNED_OR_STRING`
+  - `SIGNED_INTEGER`
+  - `IEEE754_FLOAT`
+  - `IEEE754_DOUBLE`
 - `Direction`: Specifies sort direction
-  - ASCENDING
-  - DESCENDING
+  - `ASCENDING`
+  - `DESCENDING`
 - `ProcessingOrder`: Specifies byte processing order
-  - LSB_FIRST (recommended for numeric types)
-  - MSB_FIRST (recommended for strings)
+  - `LSB_FIRST` (recommended for numeric types)
+  - `MSB_FIRST` (recommended for strings)
 - `ErrorCode`: Error codes for exception handling
-  - SUCCESS
-  - NULL_POINTER
-  - INVALID_ELEMENT_SIZE
-  - MEMORY_ALLOCATION
-  - UNSUPPORTED_DATA_TYPE
+  - `SUCCESS`
+  - `NULL_POINTER`
+  - `INVALID_ELEMENT_SIZE`
+  - `MEMORY_ALLOCATION`
+  - `UNSUPPORTED_DATA_TYPE`
 
 **Public Methods**
 
