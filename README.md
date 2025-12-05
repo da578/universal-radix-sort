@@ -154,6 +154,7 @@ Universal radix sort achieves O(n·k) time complexity where k is the number of b
 | int32_t             | 100,000  | 4.9       | 3.4x faster               |
 | float               | 100,000  | 5.9       | 2.7x faster               |
 | Fixed-length string | 100,000  | 29.9      | 7.0x faster               |
+
 Performance measured on Intel i5-3320M @ 3,30GHz, results may vary
 
 **License**
