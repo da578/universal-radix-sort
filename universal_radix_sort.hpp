@@ -5,6 +5,7 @@
  * This header provides a template class for universal radix sort implementation
  * supporting multiple data types with configurable sort direction and order.
  */
+
 #ifndef UNIVERSAL_RADIX_SORT_HPP
 #define UNIVERSAL_RADIX_SORT_HPP
 
@@ -15,15 +16,16 @@
 #include <iostream>
 #include <memory>
 #include <stdexcept>
-#include <utility>
+#include <string>
 #include <vector>
 
 namespace radix {
+
 /*!
  * @brief Universal Radix Sort implementation with class-based design
  *
  * This class template provides a flexible and type-safe implementation of
- * radix sort for various data type including signed integers, floating-point
+ * radix sort for various data types including signed integers, floating-point
  * numbers, and strings.
  *
  * @tparam T The data type to be sorted
@@ -91,7 +93,7 @@ public:
   /*!
    * @brief Constructor with configuration parameters
    *
-   * @param data_type Type of data to be sorted (default: UNSIGNED_OR_STRING)
+   * @param dataType Type of data to be sorted (default: UNSIGNED_OR_STRING)
    * @param order Byte processing order (default: LSB_FIRST)
    * @param direction Sort direction (default: ASCENDING)
    */
@@ -154,7 +156,7 @@ public:
       post_process_data(array, n);
     }
 
-    // Apply reverse for desencding order (for non-string types)
+    // Apply reverse for descending order (for non-string types)
     if (direction_ == Direction::DESCENDING &&
         data_type_ != DataType::UNSIGNED_OR_STRING) {
       reverse_array(array, n);
@@ -176,7 +178,7 @@ public:
   /*!
    * @brief Validate data type compatibility with element size
    *
-   * @param element_size Size of each element in bytes
+   * @param elementSize Size of each element in bytes
    * @throw RadixException if validation fails
    */
   void validate_data_type(const size_t element_size) const {
@@ -197,7 +199,7 @@ public:
       break;
     case DataType::SIGNED_INTEGER:
     case DataType::UNSIGNED_OR_STRING:
-      // No specific size requirements for the types
+      // No specific size requirements for these types
       break;
     default:
       throw RadixException(ErrorCode::UNSUPPORTED_DATA_TYPE,
@@ -223,7 +225,7 @@ public:
   static void print_array(const std::vector<long> &arr) {
     for (size_t i = 0; i < arr.size(); ++i) {
       std::cout << arr[i];
-      if (arr.size() - 1)
+      if (i < arr.size() - 1)
         std::cout << " ";
     }
     std::cout << std::endl;
@@ -297,7 +299,7 @@ private:
    * @brief Post-process data to restore original representation
    *
    * @param array Pointer to the array to be processed
-   * @patam n Number of elements
+   * @param n Number of elements
    */
   void post_process_data(T *array, const size_t n) {
     switch (data_type_) {
@@ -323,11 +325,11 @@ private:
    */
   void flip_msb_for_signed_types(T *array, const size_t n) {
     unsigned char *bytes = reinterpret_cast<unsigned char *>(array);
-    const unsigned char sign_bit_mask = 0x80; // 10000000 in binary
+    const unsigned char signBitMask = 0x80; // 10000000 in binary
 
     for (size_t i = 0; i < n; ++i) {
-      size_t msb_index = i * sizeof(T) + (sizeof(T) - 1);
-      bytes[msb_index] ^= sign_bit_mask;
+      size_t msbIndex = i * sizeof(T) + (sizeof(T) - 1);
+      bytes[msbIndex] ^= signBitMask;
     }
   }
 
@@ -336,7 +338,7 @@ private:
    *
    * @param array Pointer to the array of float values
    * @param n Number of elements
-   * @param is_pre_process true for pre-processing, false for post-processing
+   * @param isPreprocess true for pre-processing, false for post-processing
    */
   void float_pre_post_processing(float *array, const size_t n,
                                  const bool is_pre_process) {
@@ -378,7 +380,8 @@ private:
    * @param n Number of elements
    * @param isPreprocess true for pre-processing, false for post-processing
    */
-  void double_pre_post_processing(double *array, size_t n, bool isPreprocess) {
+  void double_pre_post_processing(double *array, const size_t n,
+                                  const bool is_pre_process) {
     union DoubleConverter {
       double d;
       uint64_t u64;
@@ -390,7 +393,7 @@ private:
       DoubleConverter converter;
       converter.d = array[i];
 
-      if (isPreprocess) {
+      if (is_pre_process) {
         // Convert to sortable representation
         if (converter.u64 & SIGN_BIT_MASK) {
           converter.u64 = ~converter.u64; // Negative values: flip all bits
@@ -405,6 +408,7 @@ private:
           converter.u64 = ~converter.u64; // Was negative: flip all bits back
         }
       }
+
       array[i] = converter.d;
     }
   }
@@ -414,8 +418,8 @@ private:
    *
    * @param array Pointer to the array to be sorted
    * @param n Number of elements
-   * @param byte_index Index of the byte to sort by
-   * @param temp_array Temporary array for sorting
+   * @param byteIndex Index of the byte to sort by
+   * @param tempArray Temporary array for sorting
    */
   void counting_sort_byte(T *array, const size_t n, const size_t byte_index,
                           T *temp_array) {
@@ -423,24 +427,25 @@ private:
     size_t count[RADIX_BASE] = {0};
     unsigned char *bytes = reinterpret_cast<unsigned char *>(array);
 
-    // Count occurences of each byte value
+    // Count occurrences of each byte value
     for (size_t i = 0; i < n; ++i) {
       unsigned char byte_value = bytes[i * sizeof(T) + byte_index];
       count[byte_value]++;
     }
 
-    // Converts count to cumulative positions (prefix sum)
-    for (size_t i = 1; i < RADIX_BASE; i++) {
+    // Convert counts to cumulative positions (prefix sum)
+    for (size_t i = 1; i < RADIX_BASE; ++i) {
       count[i] += count[i - 1];
     }
 
     // Build output array in reverse order for stability
     unsigned char *temp_bytes = reinterpret_cast<unsigned char *>(temp_array);
-    for (size_t i = n - 1; i > 0; i--) {
-      unsigned char byte_value = bytes[i * sizeof(T) + byte_index];
-      size_t output_position = --count[byte_value];
-      std::memcpy(&temp_bytes[output_position * sizeof(T)],
-                  &bytes[i * sizeof(T)], sizeof(T));
+    for (size_t i = n; i > 0; --i) {
+      size_t current_index = i - 1;
+      unsigned char byte_value = bytes[current_index * sizeof(T) + byte_index];
+      size_t outputPos = --count[byte_value];
+      std::memcpy(&temp_bytes[outputPos * sizeof(T)],
+                  &bytes[current_index * sizeof(T)], sizeof(T));
     }
 
     // Copy sorted elements back to original array
@@ -457,7 +462,7 @@ private:
   void radix_sort_strings(char *array, const size_t n,
                           const size_t element_size) {
     // Use std::sort with custom comparator for proper string sorting
-    auto comparator = [&element_size](const char *a, const char *b) {
+    auto comparator = [element_size](const char *a, const char *b) {
       return std::strncmp(a, b, element_size) < 0;
     };
 
@@ -487,6 +492,7 @@ private:
     // Copy back to original array
     std::memcpy(array, temp_buffer.data(), n * element_size);
   }
+
   /*!
    * @brief Reverse an array to change sort order
    *
@@ -495,11 +501,11 @@ private:
    */
   void reverse_array(T *array, const size_t n) {
     for (size_t i = 0; i < n / 2; ++i) {
-      std::swap(array[i], array[n - i - 1]);
+      std::swap(array[i], array[n - 1 - i]);
     }
   }
 };
 
 } // namespace radix
 
-#endif
+#endif // UNIVERSAL_RADIX_SORT_HPP

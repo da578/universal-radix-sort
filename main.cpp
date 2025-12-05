@@ -1,10 +1,17 @@
 /*!
  * @file main.cpp
  * @brief Test driver for universal radix sort implementation with comprehensive
- * tests
+ * tests and performance measurement
  */
 
 #include "universal_radix_sort.hpp"
+#include <chrono>
+#include <cstdlib>
+#include <functional>
+#include <iomanip>
+#include <random>
+#include <string>
+#include <vector>
 
 using namespace radix;
 using namespace std;
@@ -16,6 +23,7 @@ void test_doubles();
 void test_strings();
 void test_strings_descending();
 void test_edge_cases();
+void measure_performance();
 
 int main() {
   cout << "=== UNIVERSAL RADIX SORT TEST SUITE IN C++ ===" << endl;
@@ -36,6 +44,10 @@ int main() {
   cout << "\n------------------------------------------------" << endl;
 
   test_edge_cases();
+  cout << "\n------------------------------------------------" << endl;
+
+  measure_performance();
+  cout << "\n------------------------------------------------" << endl;
 
   cout << "\n=== ALL TESTS COMPLETED ===" << endl;
   return 0;
@@ -320,4 +332,170 @@ void test_edge_cases() {
       cout << "NULL pointer test: FAILED (unexpected error code)" << endl;
     }
   }
+}
+
+// Performance measurement functions
+double measure_time(const function<void()> &func) {
+  auto start = chrono::high_resolution_clock::now();
+  func();
+  auto end = chrono::high_resolution_clock::now();
+  return chrono::duration<double, milli>(end - start).count();
+}
+
+void generate_random_ints(vector<int32_t> &data, size_t size) {
+  random_device rd;
+  mt19937 gen(rd());
+  uniform_int_distribution<int32_t> dist(numeric_limits<int32_t>::min(),
+                                         numeric_limits<int32_t>::max());
+
+  data.clear();
+  data.reserve(size);
+  for (size_t i = 0; i < size; i++) {
+    data.push_back(dist(gen));
+  }
+}
+
+void generate_random_floats(vector<float> &data, size_t size) {
+  random_device rd;
+  mt19937 gen(rd());
+  uniform_real_distribution<float> dist(-1e7, 1e7);
+
+  data.clear();
+  data.reserve(size);
+  for (size_t i = 0; i < size; i++) {
+    data.push_back(dist(gen));
+  }
+}
+
+void generate_random_strings(vector<string> &data, size_t size, size_t length) {
+  random_device rd;
+  mt19937 gen(rd());
+  uniform_int_distribution<char> char_dist('a', 'z');
+
+  data.clear();
+  data.reserve(size);
+  for (size_t i = 0; i < size; i++) {
+    string str(length, ' ');
+    for (size_t j = 0; j < length; j++) {
+      str[j] = char_dist(gen);
+    }
+    data.push_back(str);
+  }
+}
+
+double measure_radix_sort(vector<int32_t> &data) {
+  UniversalRadixSort<int32_t> sorter(
+      UniversalRadixSort<int32_t>::DataType::SIGNED_INTEGER,
+      UniversalRadixSort<int32_t>::ProcessingOrder::LSB_FIRST,
+      UniversalRadixSort<int32_t>::Direction::ASCENDING);
+
+  return measure_time([&]() { sorter.sort(data); });
+}
+
+double measure_std_sort(vector<int32_t> &data) {
+  return measure_time([&]() { sort(data.begin(), data.end()); });
+}
+
+double measure_radix_sort(vector<float> &data) {
+  UniversalRadixSort<float> sorter(
+      UniversalRadixSort<float>::DataType::IEEE754_FLOAT,
+      UniversalRadixSort<float>::ProcessingOrder::LSB_FIRST,
+      UniversalRadixSort<float>::Direction::ASCENDING);
+
+  return measure_time([&]() { sorter.sort(data); });
+}
+
+double measure_std_sort(vector<float> &data) {
+  return measure_time([&]() { sort(data.begin(), data.end()); });
+}
+
+double measure_radix_sort_strings(vector<char> &buffer, size_t n,
+                                  size_t element_size) {
+  UniversalRadixSort<char> sorter(
+      UniversalRadixSort<char>::DataType::UNSIGNED_OR_STRING,
+      UniversalRadixSort<char>::ProcessingOrder::MSB_FIRST,
+      UniversalRadixSort<char>::Direction::ASCENDING);
+
+  return measure_time([&]() { sorter.sort(buffer.data(), n); });
+}
+
+double measure_std_sort_strings(vector<string> &data) {
+  return measure_time([&]() { sort(data.begin(), data.end()); });
+}
+
+void measure_performance() {
+  cout << "\n";
+  cout << "--- Performance ---\n";
+  cout << "\nUniversal radix sort achieves O(n·k) time complexity where k is "
+          "the number of bytes per element,\n";
+  cout << "outperforming O(n log n) comparison sorts for large datasets with "
+          "small key sizes.\n\n";
+
+  cout << "┌───────────────────────────┬───────────┬───────────────┬───────────"
+          "────────────────┐\n";
+  cout << "│ Data Type                 │ Elements  │ Time (ms)     │ "
+          "Comparison with std::sort │\n";
+  cout << "├───────────────────────────┼───────────┼───────────────┼───────────"
+          "────────────────┤\n";
+
+  // Measure for int32_t
+  {
+    const size_t size = 100000;
+    vector<int32_t> data;
+    generate_random_ints(data, size);
+
+    double radix_time = measure_radix_sort(data);
+    double std_time = measure_std_sort(data);
+    double speedup = std_time / radix_time;
+
+    cout << "│ int32_t                   │ " << setw(8) << size << "  │ "
+         << setw(12) << fixed << setprecision(1) << radix_time << "  │ "
+         << fixed << setprecision(1) << speedup << "x faster               │\n";
+  }
+
+  // Measure for float
+  {
+    const size_t size = 100000;
+    vector<float> data;
+    generate_random_floats(data, size);
+
+    double radix_time = measure_radix_sort(data);
+    double std_time = measure_std_sort(data);
+    double speedup = std_time / radix_time;
+
+    cout << "│ float                     │ " << setw(8) << size << "  │ "
+         << setw(12) << fixed << setprecision(1) << radix_time << "  │ "
+         << fixed << setprecision(1) << speedup << "x faster               │\n";
+  }
+
+  // Measure for fixed-length strings
+  {
+    const size_t size = 100000;
+    const size_t string_length = 10;
+    vector<string> string_data;
+    generate_random_strings(string_data, size, string_length);
+
+    size_t element_size = string_length + 1;
+    vector<char> buffer(string_data.size() * element_size);
+
+    for (size_t i = 0; i < string_data.size(); i++) {
+      char *dest = &buffer[i * element_size];
+      strncpy(dest, string_data[i].c_str(), element_size);
+      dest[element_size - 1] = '\0';
+    }
+
+    double radix_time =
+        measure_radix_sort_strings(buffer, string_data.size(), element_size);
+    double std_time = measure_std_sort_strings(string_data);
+    double speedup = std_time / radix_time;
+
+    cout << "│ Fixed-length string       │ " << setw(8) << size << "  │ "
+         << setw(12) << fixed << setprecision(1) << radix_time << "  │ "
+         << fixed << setprecision(1) << speedup << "x faster               │\n";
+  }
+
+  cout << "└───────────────────────────┴───────────┴───────────────┴───────────"
+          "────────────────┘\n";
+  cout << "\nPerformance measured on " << "current machine"
+       << ", results may vary\n";
 }
